@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>扫墓 · 校友纪念</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a1a;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 24px 20px 32px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal-box {
+            background: white;
+            padding: 32px 28px;
+            border-radius: 24px;
+            width: 88%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .modal-box h2 { font-size: 1.6rem; margin-bottom: 12px; }
+        .modal-box p { font-size: 1rem; color: #555; line-height: 1.6; margin-bottom: 24px; white-space: pre-wrap; }
+        .enter-btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .enter-btn:active { transform: scale(0.95); }
+        .header {
+            text-align: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #ececec;
+            margin-bottom: 20px;
+        }
+        .header h1 { font-size: 1.8rem; font-weight: 600; letter-spacing: 1px; }
+        .header p { color: #888; font-size: 0.85rem; margin-top: 4px; }
+        .people-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .people-grid::-webkit-scrollbar { width: 4px; }
+        .people-grid::-webkit-scrollbar-thumb { background: #ccc; border-radius: 8px; }
+        .person-card {
+            background: #f8f9fc;
+            padding: 14px 16px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .person-card:active {
+            background: #eef0f5;
+            transform: scale(0.98);
+        }
+        .person-card .avatar {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: #e4e7ef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .person-card .avatar img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .person-card .info { flex: 1; }
+        .person-card .info .name { font-weight: 600; font-size: 1.05rem; }
+        .person-card .info .desc { font-size: 0.8rem; color: #777; margin-top: 2px; }
+        .add-form {
+            background: #f8f9fc;
+            padding: 20px 18px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+        .add-form h3 { font-size: 1rem; margin-bottom: 14px; font-weight: 600; }
+        .add-form .form-group { margin-bottom: 12px; }
+        .add-form input, .add-form textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: white;
+            transition: 0.2s;
+        }
+        .add-form input:focus, .add-form textarea:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+        }
+        .add-form textarea { resize: vertical; min-height: 44px; }
+        .btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-danger {
+            background: #ff3b30;
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+        .detail-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+        }
+        .detail-content {
+            background: white;
+            width: 92%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 24px;
+            padding: 24px 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .detail-content .close {
+            float: right;
+            font-size: 26px;
+            cursor: pointer;
+            color: #888;
+            transition: 0.2s;
+        }
+        .detail-content .close:hover { transform: rotate(90deg); }
+        .detail-header { display: flex; gap: 16px; margin-bottom: 20px; align-items: center; }
+        .detail-header .avatar-lg {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: #e4e7ef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .detail-header .avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+        .detail-header .info h3 { font-size: 1.2rem; }
+        .detail-header .info p { color: #777; font-size: 0.85rem; }
+        .comment-item {
+            background: #f5f7fa;
+            padding: 10px 14px;
+            border-radius: 14px;
+            margin: 8px 0;
+        }
+        .comment-item .time { font-size: 0.7rem; color: #999; margin-bottom: 4px; }
+        .comment-item .text { word-break: break-word; }
+        .comment-item .del-btn { float: right; margin-top: 4px; }
+        .add-comment {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .add-comment input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        .add-comment input:focus { outline: none; border-color: #007aff; }
+        .loading { text-align: center; padding: 30px; color: #999; }
+        footer { text-align: center; font-size: 0.7rem; color: #bbb; margin-top: 20px; }
+        .empty-tip { text-align: center; color: #aaa; padding: 20px 0; }
+    </style>
+</head>
+<body>
+
+<!-- 进入弹窗 -->
+<div id="entryModal" class="modal">
+    <div class="modal-box">
+        <h2>🕯️ 纪念</h2>
+        <p>为了纪念校友，制作此网站<br>点击进入，留下你的思念</p>
+        <button class="enter-btn" id="enterBtn">进入</button>
+    </div>
+</div>
+
+<!-- 主界面 -->
+<div class="container" id="mainApp" style="display: none;">
+    <div class="header">
+        <h1>📜 校友名录</h1>
+        <p>点击名字留言 · 所有人共享</p>
+    </div>
+
+    <div id="peopleGrid"><div class="loading">加载中...</div></div>
+
+    <div class="add-form">
+        <h3>➕ 添加同学</h3>
+        <div class="form-group"><input type="text" id="newName" placeholder="姓名 *"></div>
+        <div class="form-group"><input type="text" id="newImage" placeholder="头像图片网址（选填）"></div>
+        <div class="form-group"><input type="text" id="newEmoji" placeholder="头像表情（无图片时用）" value="👤"></div>
+        <div class="form-group"><textarea id="newDesc" rows="2" placeholder="简介（选填）"></textarea></div>
+        <button class="btn" id="submitNewPerson">添加</button>
+    </div>
+    <footer>数据自动保存 · 所有人共享</footer>
+</div>
+
+<script>
+    const BIN_ID = "672e5d8bad19ca34f8d8e123";
+    const API_KEY = "$2a$10$tQZqVJp4MqNxWzR3yFh8OeR9sT1uV2wX3yZ4aB5cD6eF7gH8iJ9kL0";
+
+
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    let peopleList = [];
+    let commentsData = [];
+
+    function genId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 6); }
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+
+    async function loadFromCloud() {
+        try {
+            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
+            const data = await res.json();
+            if (data.record) {
+                peopleList = data.record.people || [];
+                commentsData = data.record.comments || [];
+            }
+            renderPeople();
+        } catch (e) {
+            console.error(e);
+            document.getElementById('peopleGrid').innerHTML = '<div class="loading">加载失败，请检查配置</div>';
+        }
+    }
+
+    async function saveToCloud() {
+        await fetch(API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+            body: JSON.stringify({ people: peopleList, comments: commentsData })
+        });
+    }
+
+    function renderPeople() {
+        const grid = document.getElementById('peopleGrid');
+        if (peopleList.length === 0) {
+            grid.innerHTML = '<div class="empty-tip">暂无人物，添加一位吧</div>';
+            return;
+        }
+        let html = '';
+        for (const p of peopleList) {
+            const avatarContent = p.imgUrl
+                ? `<img src="${p.imgUrl}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:1.7rem;\\'>${escapeHtml(p.emoji || '👤')}</span>';">`
+                : `<span style="font-size:1.7rem;">${escapeHtml(p.emoji || '👤')}</span>`;
+            html += `<div class="person-card" data-id="${p.id}">
+                        <div class="avatar">${avatarContent}</div>
+                        <div class="info">
+                            <div class="name">${escapeHtml(p.name)}</div>
+                            <div class="desc">${escapeHtml(p.desc || '')}</div>
+                        </div>
+                    </div>`;
+        }
+        grid.innerHTML = html;
+        document.querySelectorAll('.person-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const person = peopleList.find(p => p.id === card.dataset.id);
+                if (person) openDetail(person);
+            });
+        });
+    }
+
+    async function openDetail(person) {
+        const modal = document.createElement('div');
+        modal.className = 'detail-modal';
+        const personComments = commentsData.filter(c => c.personId === person.id);
+        let commentsHtml = personComments.length === 0
+            ? '<div class="empty-tip">暂无留言</div>'
+            : personComments.map(c => `
+                <div class="comment-item">
+                    <div class="time">${escapeHtml(c.time)}</div>
+                    <div class="text">💬 ${escapeHtml(c.text)}</div>
+                    <button class="btn-danger del-btn" data-id="${c.id}">删除</button>
+                </div>
+            `).join('');
+
+        modal.innerHTML = `
+            <div class="detail-content">
+                <span class="close">&times;</span>
+                <div class="detail-header">
+                    <div class="avatar-lg">
+                        ${person.imgUrl ? `<img src="${person.imgUrl}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:2rem;\\'>${escapeHtml(person.emoji || '👤')}</span>';">` : escapeHtml(person.emoji || '👤')}
+                    </div>
+                    <div class="info">
+                        <h3>${escapeHtml(person.name)}</h3>
+                        <p>${escapeHtml(person.desc || '')}</p>
+                    </div>
+                </div>
+                <div style="font-weight:600; margin-bottom:8px;">📝 留言板</div>
+                <div id="commentList">${commentsHtml}</div>
+                <div class="add-comment">
+                    <input type="text" id="commentInput" placeholder="写点什么...">
+                    <button class="btn" id="submitComment">留言</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('.close').onclick = () => modal.remove();
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+        modal.querySelector('#submitComment').addEventListener('click', async () => {
+            const input = modal.querySelector('#commentInput');
+            const text = input.value.trim();
+            if (!text) return;
+            commentsData.push({
+                id: genId(),
+                personId: person.id,
+                text: text.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+                time: new Date().toLocaleString()
+            });
+            await saveToCloud();
+            modal.remove();
+            openDetail(person);
+        });
+
+        modal.querySelectorAll('.del-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                commentsData = commentsData.filter(c => c.id !== btn.dataset.id);
+                await saveToCloud();
+                modal.remove();
+                openDetail(person);
+            });
+        });
+    }
+
+    // 进入
+    document.getElementById('enterBtn').addEventListener('click', () => {
+        document.getElementById('entryModal').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        loadFromCloud();
+    });
+
+    // 添加人物
+    document.getElementById('submitNewPerson').addEventListener('click', async () => {
+        const name = document.getElementById('newName').value.trim();
+        if (!name) { alert('请输入姓名'); return; }
+        peopleList.push({
+            id: genId(),
+            name,
+            imgUrl: document.getElementById('newImage').value.trim(),
+            emoji: document.getElementById('newEmoji').value.trim() || '👤',
+            desc: document.getElementById('newDesc').value.trim() || '暂无简介'
+        });
+        await saveToCloud();
+        renderPeople();
+        document.getElementById('newName').value = '';
+        document.getElementById('newImage').value = '';
+        document.getElementById('newDesc').value = '';
+    });
+</script>
+</body>
+</html>
